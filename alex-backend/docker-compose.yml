@@ -1,0 +1,61 @@
+version: '3.8'
+
+services:
+  alex-backend:
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+      - ./.env:/app/.env
+    environment:
+      - DATABASE_URL=sqlite:///./data/alex.db
+      - OLLAMA_HOST=http://ollama:11434
+    depends_on:
+      - ollama
+    restart: unless-stopped
+    networks:
+      - alex-network
+
+  ollama:
+    image: ollama/ollama:latest
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    environment:
+      - OLLAMA_ORIGINS=*
+    restart: unless-stopped
+    networks:
+      - alex-network
+    # For GPU support (uncomment if you have NVIDIA GPU)
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: 1
+    #           capabilities: [gpu]
+
+  # Optional: PostgreSQL for production
+  # postgres:
+  #   image: postgres:15
+  #   environment:
+  #     POSTGRES_DB: alex
+  #     POSTGRES_USER: alex
+  #     POSTGRES_PASSWORD: alex_password
+  #   volumes:
+  #     - postgres_data:/var/lib/postgresql/data
+  #   ports:
+  #     - "5432:5432"
+  #   networks:
+  #     - alex-network
+
+volumes:
+  ollama_data:
+  # postgres_data:
+
+networks:
+  alex-network:
+    driver: bridge
